@@ -12,7 +12,7 @@ permissions: #limit this for security
   contents: read # Allows the action to read your code
 
 jobs:
-  deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       # 1. Pull the code from your repo

@@ -1,32 +1,32 @@
 # azure - frontend - managed identity - blob data contributor
 
-name: OIDC frontend deployment
+name: frontend deployment
 on:
   push:
     branches: [main] #runs when push to main
     paths:
-      - 'front/**'
+      - 'frontend/**'
 
 permissions: #limit this for security
-  id-token: write # CRITICAL: This allows the OIDC handshake
-  contents: read # Allows the action to read your code
+  id-token: write # allows gh to generate tk for OIDC handshake
+  contents: read # Allows the action to read the code
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
-      # 1. Pull the code from your repo
+      # 1. Pull the code from repo
       - name: "Checkout GitHub Action"
         uses: actions/checkout@v4
-      # 2. Log into Azure using OIDC (No Password)
+      # 2. Log into Azure using OIDC
       - name: "Az CLI login"
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      # 3. Upload files to the $web container in Storage
-      - name: "Sync Files to Azure"
+      # 3. Upload files to the $web container in blob
+      - name: "Sync Files to blbo"
         uses: azure/CLI@v1
         with:
           inlineScript: |

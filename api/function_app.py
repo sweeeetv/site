@@ -2,24 +2,19 @@ import azure.functions as func
 import os
 import json
 from azure.core.exceptions import ResourceNotFoundError
-from azure.data.tables import TableClient # <--- Changed this line
+from azure.data.tables import TableClient
 connection_string = os.environ["COSMOS_DB_CONNECTION_STRING"]
     
-    # 1. Connect using the Table API Specialist
-    # This automatically looks for 'TableEndpoint' in your string!
 table_client = TableClient.from_connection_string(conn_str=connection_string, table_name="visitor-counter-table")
 app = func.FunctionApp()
 
-@app.route(route="getresumecounter", auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="getresumecounter", auth_level=func.AuthLevel.ANONYMOUS)#this is the route that will be called when the function is triggered
+#anonymous means that the function can be called without any authentication
 def getresumecounter(req: func.HttpRequest) -> func.HttpResponse:
-    
-    # 2. Get the specific row (PartitionKey and RowKey are the 'Table' way)
-    #PartitionKey="visitor_stats" and RowKey="1"
     try:
         entity = table_client.get_entity(partition_key="visitor_stats", row_key="1")
-        # 3. Increment
+        # increment
         entity['count'] += 1
-        # 4. Save back to the Cloud Vault
         table_client.update_entity(mode='merge', entity=entity)
     except ResourceNotFoundError:
         # If the entity doesn't exist, create it with count=1

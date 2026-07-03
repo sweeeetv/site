@@ -1,12 +1,13 @@
 # .github/workflows/test.yml
+# manual trigger: 
 name: Test OIDC Auth #no rule. must be readable, shows up in the "Actions" tab
 
-on: # trigger
+on: # trigger. Other choices: push, pull_request, schedule (cron job), workflow_call (another workfow calls this)
   workflow_dispatch:  # manual trigger only
 
 permissions:
   id-token: write   # allows GitHub to mint the JWT
-  contents: read
+  contents: read #allows workflow to read repo code
 
 jobs:
   test-auth:
@@ -23,3 +24,7 @@ jobs:
         run: |
           az account show
           az group show --name rg-resume
+
+
+
+          

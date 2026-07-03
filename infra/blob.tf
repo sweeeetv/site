@@ -8,6 +8,10 @@ resource "azurerm_storage_account" "frontend" {
   account_kind             = "StorageV2"
   access_tier              = "Hot"
   tags                     = var.tags
+    custom_domain {
+    name          = "www.weirdcloud.dev"
+    use_subdomain = true
+  }
 }
 
 //az resource list - will not track this because it is not an ARM resource and does not have its own ID.

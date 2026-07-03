@@ -3,7 +3,6 @@ name: Deploy api
 on:
   push:
     branches: [main]
-    workflow_dispatch:
     paths: 'api/**'
 
 permissions: # 1. REQUIRED FOR OIDC

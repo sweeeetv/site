@@ -6,14 +6,14 @@ resource "azurerm_cosmosdb_account" "counter_db" {
     kind = "GlobalDocumentDB"
     automatic_failover_enabled = false
     public_network_access_enabled = true
-  capabilities {
-    name = "EnableServerless"
+  capabilities { 
+    name = "EnableServerless" 
   }
   capabilities {
     name = "EnableTable"
   }
   consistency_policy {
-    // For a personal project, Session consistency is a good balance between performance and consistency. It ensures that reads will see the most recent writes, which is important for a visitor counter to provide accurate counts, while still offering better performance than stronger consistency levels.
+    // Session consistency is a good balance between performance and consistency. It ensures that reads will see the most recent writes, while still offering better performance than stronger consistency levels.
     consistency_level = "Session"
   }
   geo_location {
@@ -27,7 +27,7 @@ resource "azurerm_cosmosdb_table" "counter_table" {
   name                = "visitor-counter-table"
   resource_group_name = azurerm_resource_group.resume.name
   account_name        = azurerm_cosmosdb_account.counter_db.name
-  #throughput not necessary for serverless accounts, if needed, choose a throughput value below:
+  #throughput not necessary for serverless accounts, if needed, then:
   #throughput          = 400
 }
 //define the contents of the db table in the python code, no need to set up here.

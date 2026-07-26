@@ -6,7 +6,7 @@ variable "location" {
 }
 variable "tags" {
   default = {
-    project = "cloud_resume"
+    project = "my-site"
     managed_by = "terraform"
   }
 }
@@ -21,7 +21,7 @@ variable "github_org" {
   type = string
 }
 variable "github_repo" {
-  description = "personal site"
+  description = "site"
   type = string
 }
 
@@ -34,5 +34,5 @@ variable "github_token" {
 }
 variable "cloudflare_api_token" {
   type = string
-  sensitive =true //ttl of the token is about 5 days.
+  sensitive =true 
 }

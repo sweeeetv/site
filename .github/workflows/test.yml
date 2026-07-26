@@ -1,13 +1,14 @@
 # .github/workflows/test.yml
 # manual trigger: 
-name: Test OIDC Auth #no rule. must be readable, shows up in the "Actions" tab
+name: Test OIDC Auth #readable, shows up in the "Actions" tab
 
 on: # trigger. Other choices: push, pull_request, schedule (cron job), workflow_call (another workfow calls this)
   workflow_dispatch:  # manual trigger only
 
 permissions:
-  id-token: write   # allows GitHub to mint the JWT
-  contents: read #allows workflow to read repo code
+  id-token: write   # allows GitHub to mint the JWT (for Azure login)
+  contents: read # this jwt token can read repo contents (code, commits, tags, releases) via GitHub's API — which is what actions/checkout@v4 uses under the hood to the repo onto the runner. Without it, actions/checkout would fail.
+  # this section: also can't push commits, open issues, modify PRs, or touch Actions settings. If a malicious dependency or compromised action tried to abuse the token mid-run, the blast radius is capped at "read the code," not "do anything to this GH repo."
 
 jobs:
   test-auth:

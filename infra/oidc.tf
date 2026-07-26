@@ -1,16 +1,16 @@
 
-#for fetching tenant id,  a specific data source that contains a few infos about the provider's current configuration, including the tenant ID, object ID, and client ID of the authenticated service principal or managed identity ("Who is running this terraform right now?" - gh or local laptop' IDs).
+#fetch tenant id,  a specific data source that contains infos about the provider's configuration, including the tenant ID, object ID, and client ID of the authenticated service principal or managed identity ("Who is running this terraform right now?" - gh or local laptop' IDs).
 data "azuread_client_config" "current" {}
 #subscription
 data "azurerm_subscription" "current" {}
 
-#create the app registration - or a an identity definition (similar to a human user or a function app). One per app
-resource "azuread_application" "github_cicd" { //it alone cant do anything, must be assigned with a service pricipal and assign roles.
+#create the app registration - or an identity def (similar to a human user or a function app). One per app
+resource "azuread_application" "github_cicd" { //it alone can't do anything, must be assigned with a service pricipal and assign roles.
     display_name = "github-personal-site"
 }
-#create a service principal for the app registration, the service principal is the account. (eq. managed identity for function app)
+#create a service principal for the app registration, the sp is the account. (eq. managed identity for function app)
 resource "azuread_service_principal" "github_cicd" {
-    client_id = azuread_application.github_cicd.client_id //
+    client_id = azuread_application.github_cicd.client_id 
 }
 #create the federated cred
 #only trust JWTs from this repo + branch
@@ -18,15 +18,19 @@ resource "azuread_service_principal" "github_cicd" {
 # 3 checks: issuer, subject, audience
 resource "azuread_application_federated_identity_credential" "github_main" {
     application_id = azuread_application.github_cicd.id
-    display_name = "github-personal-site-main-branch"
-    #azure fetches github's public key from this URL, to verify JWTs from gh
+    display_name = "github-site-main-branch"
+#azure fetches gh's public key from this URL, to verify JWTs from gh
     issuer ="https://token.actions.githubusercontent.com" //1
     # must match what GitHub puts in the JWT
     subject  = "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main" //2
     // audience is the app registration's client_id(azuread_application.github_cicd.client_id)
-    //JWT contains an aud (audience) field. answers "who is this token intended for?"
+    //JWT contains an aud field. answers "who is this token for?"
     //3
-    audiences = ["api://AzureADTokenExchange"] //a fixed string Microsoft and GitHub agreed on. It means "this JWT is intended to be exchanged for an Azure token." 
+    audiences = ["api://AzureADTokenExchange"] //a fixed string Microsoft and GitHub agreed on. lets GHA authenticate to Azure without a stored secret/password.
+# Mental image:
+#GA generates a short-lived JWT token, signed by GitHub, saying "I am run X of repo Y on branch Z."
+#That JWT gets sent to Entra ID and exchanged for a real Azure access token.
+# For Entra ID to agree to do that exchange, the incoming JWT must declare its intended audience as - api://AzureADTokenExchange — this is Microsoft's fixed string that means "this token is presenting itself to be traded in for an Entra ID token, nothing else."
 }
 //assign contributor role on the rg - what the identity allowed to do
 resource "azurerm_role_assignment" "github_cicd_contributor"{
@@ -57,4 +61,4 @@ resource "github_actions_secret" "subscription_id" {
 
 ## -----------Notes-------------- ##
 # why cant the app reg be assigned with roles, needs service principal?
-# Because, app regs are global objects, it lives in MS's global app registry not the tenant, since it does not fully exist in the tenant, then it can not be assigned with rback roles. 
+# Because, app regs are global objects, it lives in MS's global app registry not the tenant, since it does not fully exist in the tenant, then it can not be assigned with rbac roles. 

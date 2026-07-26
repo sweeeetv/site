@@ -14,12 +14,13 @@ resource "azurerm_storage_account" "frontend" {
   }
 }
 
-//az resource list - will not track this because it is not an ARM resource and does not have its own ID.
+//Turns on Static Website hosting on blob and configures its landing page (index_document) and custom error page (error_404_document) — both set to index.html here.
+
 resource "azurerm_storage_account_static_website" "resume" {
   storage_account_id = azurerm_storage_account.frontend.id
-  error_404_document = "index.html"
-  index_document     = "index.html"
-}
+  error_404_document = "index.html" //use a 404.html 
+  index_document     = "index.html" 
+}//az resource list will not track this because it isn't an ARM resource and does not have its own ID.
 
 resource "azurerm_storage_account" "function_storage" {
   name                     = "resumevisitorcounterapi"

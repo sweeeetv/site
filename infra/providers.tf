@@ -26,7 +26,7 @@ terraform {
       version = "~> 2.0"
     }
   }
-  #store the tfstate files in my blob storage provisioned for tf state files.
+#store the tfstate files in the blob provisioned for tf state files.
   backend "azurerm" {
     resource_group_name  = "rg-terraform-state"
     storage_account_name = "tfstatepersonalxgao"

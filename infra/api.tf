@@ -5,8 +5,9 @@ resource "azurerm_storage_container" "visitor_counter_func_blob_container" {
   container_access_type = "private"
 }
 
-########## function app resources ##########
-//Azure Function App on Consumption Plan (Linux) with Python runtime, using the new flex deployment model, which decouples the function app from the underlying hosting plan and allows for more flexible scaling and configuration options. It also supports the latest Python runtime versions and has better cold start performance compared to the traditional consumption plan.
+#------------------- function app resources -------------------#
+
+//Function App on Consumption Plan (Linux) with Python runtime, using the new flex deployment model, which decouples the function app from the underlying hosting plan and allows more flexible scaling and configuration options. It also supports the latest Python runtime versions and has better cold start performance compared to the traditional consumption plan.
 resource "azurerm_service_plan" "visitor_counter_plan" {
     name                = "${var.vc_api_name}_service_plan"
     resource_group_name = azurerm_resource_group.resume.name
@@ -21,17 +22,17 @@ resource "azurerm_function_app_flex_consumption" "visitor_counter_api" {
   location            = var.location
   service_plan_id     = azurerm_service_plan.visitor_counter_plan.id
 
-  # Flex deployment storage, where the function app code and state will be stored. Using Azure Blob Storage for this purpose, which is a common choice for function app storage in the flex model.
+  # deployment storage, where the code and state will be stored. Blob Storage - a common choice for function app storage in the flex model.
   storage_container_type      = "blobContainer"
-  //a public endpoint for the function app to access the blob container, this is required for the flex consumption plan to allow the function app to read/write code and state from the blob storage.
-  //the container is private, the access key is needed for authentication, which is done in the next line with storage_authentication_type and storage_access_key.
+  //a public endpoint for the function app to access the blob, this is required for the flex plan to allow the function app to read/write code and state from the blob storage.
   storage_container_endpoint  = "${azurerm_storage_account.function_storage.primary_blob_endpoint}${azurerm_storage_container.visitor_counter_func_blob_container.name}"
+    //the container is private, the access key is needed for authen, which is done in the next line with storage_authentication_type and storage_access_key.
   storage_authentication_type = "StorageAccountConnectionString"
   storage_access_key          = azurerm_storage_account.function_storage.primary_access_key
 
   # Runtime python 3.13
   runtime_name    = "python"
-  runtime_version = "3.13" //could be too high change back to 3.12.
+  runtime_version = "3.13" 
 
   # Scale & memory max 100, memory 512
   maximum_instance_count = 2
@@ -44,10 +45,11 @@ resource "azurerm_function_app_flex_consumption" "visitor_counter_api" {
    }
 
   site_config {
-    // a visitor's browser loads HTML, which has JS that calls the function app api, the browser includes a Origin: https://pp.weirdcloud.dev header on that request automatically. The api replies back the same origin indicating it is allowed. The browser then allow the JS to process the reply.
+    // a visitor's browser loads HTML, which has JS that calls the function app api, the browser includes Origin: https://pp.weirdcloud.dev header on that request automatically. The api replies back the same origin indicating it is allowed. The browser then allow the JS to process the reply.
     cors {
       allowed_origins = [
-        "https://pp.weirdcloud.dev", 
+  //az app service, function cors doesn't support wildcard *
+        "https://www.weirdcloud.dev", //this triggers the js, not pp
         "http://localhost:5500"
       ]
     }

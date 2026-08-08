@@ -1,5 +1,5 @@
-#cloudflare edge servers act as my domain's autoritative dns ns.
-#DNS operates below HTTP, no url, it only resolves hostnames.
+#cf edge servers act as wc's authoratate dns ns.
+#DNS operates below HTTP, no url, only resolves hostnames.
 data "cloudflare_zone" "domain" {
   name = "weirdcloud.dev"
 }
@@ -10,22 +10,22 @@ resource "cloudflare_record" "root" {
   zone_id = data.cloudflare_zone.domain.id
   name    = "@"
   type    = "A"  
-  content = "192.0.2.1" # Standard dummy IP used for Cloudflare redirects
+  content = "192.0.2.1" # Standard dummy IP used for CF redirects
   proxied = true 
-
-  //proxied = ?
-  //false, Cloudflare acts strictly as a routing table. It returns the Azure Storage FQDN directly to the client. The client connects directly to Azure.
-  //true -> Cloudflare intercepts the traffic. It returns Cloudflare's own Anycast IPs to the client, terminates the SSL at the edge, applies caching/WAF rules, and then proxies the request to your Azure backend.
+  //false, CF acts as a routing table, returns Azure Storage FQDN directly to the client. The client connects directly to Azure.
+  //true -> CF intercepts the traffic, and returns CF's own Anycast IPs to the client, terminates SSL at the edge, applies caching/WAF rules, and then proxies the request to Azure backend.
 }
+
+//2 ways to point apex to blob: 1) CNAME flattening. 2) Page Rule redirect.
 resource "cloudflare_page_rule" "redirect_root_to_www" {
   zone_id = data.cloudflare_zone.domain.id
-  target  = "weirdcloud.dev/*"
+  target  = "weirdcloud.dev/*" //catches all paths on apex
   status  = "active"
 
   actions {
     forwarding_url {
-      status_code = 301 # Permanent Redirect
-      url         = "https://www.weirdcloud.dev/$1" //the first asterisk
+      status_code = 301 # Permanent Redirect, good for SEO. Tells Google "these are permanently the same page, count it all toward www."
+      url   = "https://www.weirdcloud.dev/$1" //paste * from target into $1, so /foo/bar becomes https://www.weirdcloud.dev/foo/bar
     }
   }
 }
@@ -37,31 +37,31 @@ resource "cloudflare_record" "www"{
   type = "CNAME"
   content = azurerm_storage_account.frontend.primary_web_host
   proxied = true
-}
-// remember to tell blob to accept the custom domain in "azurerm_storage_account" or "InvalidUri 400", this is not a cors error.
+}//needs blob to accept the custom domain in "azurerm_storage_account" or "InvalidUri 400", this is not a cors error.
 resource "cloudflare_record" "www_verify" {
   zone_id = data.cloudflare_zone.domain.id
-  name    = "asverify.www" 
+  name    = "asverify.www" //validate first with zero downtime.
   type    = "CNAME"
-  # Prepend 'asverify.' to your storage account web host URL
+  #CNAME that Azure provides for custom domain verification. 
   content = "asverify.storageacc444resume.z8.web.core.windows.net"
   proxied = false # Verification must be unproxied
 }
 #-------------------- api -------------------------#
-resource "cloudflare_record" "api"{
+resource "cloudflare_record" "api"{ //better to point the api to a custom domain too. although not necessary.
   zone_id = data.cloudflare_zone.domain.id
   name = "pp"
   type = "CNAME"
-  content = azurerm_function_app_flex_consumption.visitor_counter_api.default_hostname //fqdn -> [myaccount.z13.web.core.windows.net.], dns does not work at http level, no shema or url
+  content = azurerm_function_app_flex_consumption.visitor_counter_api.default_hostname //fqdn only-> [myaccount.z13.web.core.windows.net.], dns does not work at http level, no shema or url. eg. not https://myaccount.z13.web.core.windows.net/api/getresumecounter
   proxied = true
 }
 #The hidden TXT record to prove ownership to Azure
-//azure's asuid method, TXT, newer than asverify CNAME method: separates the concepts of Routing and Proof of Ownership, instead use a cryptographic string (the custom_domain_verification_id) that acts as a password.
+
+//asuid method, TXT, newer than asverify CNAME: separates the concepts of Routing and Proof of Ownership, instead use a cryptographic string (custom_domain_verification_id) that acts as a password.
 resource "cloudflare_record" "api_verification" {
   zone_id = data.cloudflare_zone.domain.id
   name    = "asuid.pp" #"asuid." prefix
   type    = "TXT"
-  content = azurerm_function_app_flex_consumption.visitor_counter_api.custom_domain_verification_id // this is a token string that azure desgined this for custom domain verification, does not change over time
+  content = azurerm_function_app_flex_consumption.visitor_counter_api.custom_domain_verification_id // the token string Azure desgined for domain verification, does not change over time
   proxied = false # TXT records cannot be proxied
 }
 //custom domain binding
@@ -69,7 +69,7 @@ resource "azurerm_app_service_custom_hostname_binding" "api_binding" {
   hostname            = "pp.weirdcloud.dev"
   app_service_name    = azurerm_function_app_flex_consumption.visitor_counter_api.name
   resource_group_name = azurerm_resource_group.resume.name
-  # Tell Terraform to wait for the TXT record to exist before trying to bind
+  # Tell Terraform to wait for the TXT record to exist before binding
   depends_on = [
     time_sleep.wait_for_dns,
     cloudflare_record.api_verification,

@@ -2,15 +2,15 @@ name: Deploy api
 
 on:
   push:
-    branches: [main]
-    paths: 'api/**'
+    branches: [main] # only trigger this workflow on pushes to the main branch
+    paths: 'api/**' # only trigger this workflow if files in the api folder are changed
 
 permissions:
   id-token: write
   contents: read
 
 env:
-  AZURE_FUNCTIONAPP_NAME: "weirdcloud-visiter-counter-api"
+  AZURE_FUNCTIONAPP_NAME: "weirdcloud-visiter-counter-api" # Name of the Azure Function App
   PYTHON_VERSION: "3.13" #ver for the python app
 
 jobs:

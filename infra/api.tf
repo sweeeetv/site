@@ -54,11 +54,11 @@ resource "azurerm_function_app_flex_consumption" "visitor_counter_api" {
       ]
     }
   }
-  lifecycle {
-    ignore_changes = [
-      site_config[0].cors
-    ]
-  }
+  # lifecycle {
+  #   ignore_changes = [
+  #     site_config[0].cors
+  #   ]
+  # }
 }
 #APM for the app, captures request traces, response times, exceptions, dependency calls and custom telemetry.
 resource "azurerm_application_insights" "visitor_counter_appInsights" {

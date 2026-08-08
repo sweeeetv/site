@@ -22,8 +22,8 @@ resource "cloudflare_page_rule" "redirect_root_to_www" {
   target  = "weirdcloud.dev/*" //catches all paths on apex
   status  = "active"
 
-  actions {
-    forwarding_url {
+  actions = {
+    forwarding_url = {
       status_code = 301 # Permanent Redirect, good for SEO. Tells Google "these are permanently the same page, count it all toward www."
       url   = "https://www.weirdcloud.dev/$1" //paste * from target into $1, so /foo/bar becomes https://www.weirdcloud.dev/foo/bar
     }

@@ -22,14 +22,15 @@ resource "azuread_application_federated_identity_credential" "github_main" {
 #azure fetches gh's public key from this URL, to verify JWTs from gh
     issuer ="https://token.actions.githubusercontent.com" //1
     # must match what GitHub puts in the JWT
-    subject  = "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main" //2
-    // audience is the app registration's client_id(azuread_application.github_cicd.client_id)
+    subject  = "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main" //2 The Issuer (the external system) dictates the subject format, NOT the audience. Azure AD does not control or care how the subject is formatted; Azure AD simply acts as a strict string-matcher.
+    // audience is the app reg's client_id(azuread_application.github_cicd.client_id)
     //JWT contains an aud field. answers "who is this token for?"
     //3
     audiences = ["api://AzureADTokenExchange"] //a fixed string Microsoft and GitHub agreed on. lets GHA authenticate to Azure without a stored secret/password.
+    //When an external system wants to talk to Azure AD, it presents an encrypted token called a JSON Web Token (JWT). Every OIDC credential rule in Azure AD acts as a filter that checks three specific fields (claims) inside that incoming token: issuer, subject, and audience. If all three claims match the rule, Azure AD will trust the token and issue a new access token for the app registration. If any of the claims do not match, Azure AD will reject the token and deny access.
 # Mental image:
 #GA generates a short-lived JWT token, signed by GitHub, saying "I am run X of repo Y on branch Z."
-#That JWT gets sent to Entra ID and exchanged for a real Azure access token.
+#That JWT gets sent to Entra ID and exchanged for a real Azure access token. - GHR: "I want an Azure access token for App Registration ID client_id."
 # For Entra ID to agree to do that exchange, the incoming JWT must declare its intended audience as - api://AzureADTokenExchange — this is Microsoft's fixed string that means "this token is presenting itself to be traded in for an Entra ID token, nothing else."
 }
 //assign contributor role on the rg - what the identity allowed to do
@@ -39,7 +40,7 @@ resource "azurerm_role_assignment" "github_cicd_contributor"{
     principal_id = azuread_service_principal.github_cicd.object_id
 }
 //push the 3 ids:
-resource "github_actions_secret" "client_id" {
+resource "github_actions_secret" "client_id" { //id of the app reg.
     repository = var.github_repo
     secret_name = "AZURE_CLIENT_ID"
     plaintext_value = azuread_application.github_cicd.client_id // ID of the App Registration — a UUID that Azure generates when the resource is created

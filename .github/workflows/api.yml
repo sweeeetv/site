@@ -16,10 +16,10 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # this is used to run the job on a Linux machine.
     steps:
       - name: "Checkout GitHub Action"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 #this action checks out repo under $GITHUB_WORKSPACE, so this workflow can access it.
 
       - name: "Login via Azure (OIDC)" # 2. UPDATED LOGIN
         uses: azure/login@v2 # Use v2 for OIDC support

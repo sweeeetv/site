@@ -3,7 +3,7 @@
 name: frontend deployment
 on:
   push:
-    branches: [main] #runs when push to main
+    branches: [main] #runs when push to main, or a PR merge. ONLY if the push includes changes to the frontend folder. 
     paths:
       - 'frontend/**'
 
@@ -26,7 +26,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       # 3. Upload files to the $web container in blob
-      - name: "Sync Files to blbo"
+      - name: "Upload to Blob Storage"
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -36,3 +36,12 @@ jobs:
               -d '$web' \
               -s . \
               --overwrite
+      # Cloudflare purge step — needed because proxied = true means Cloudflare caches your static assets; without purging, visitors might see stale content after deploy until cache naturally expires:
+      # - name: Purge Cloudflare Cache
+      #   run: |
+      #     curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+      #       -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+      #       -H "Content-Type: application/json" \
+      #       --data '{"purge_everything":true}'
+
+      #only Cloudflare's own edge cache (their PoPs / data centers worldwide). purge_everything: true tells every Cloudflare edge node to drop its cached copy, so the next request that hits any CF edge server will go back to Azure origin, fetch fresh, and re-cache.

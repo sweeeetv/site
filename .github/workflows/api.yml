@@ -1,6 +1,7 @@
 name: Deploy api
 
 on:
+  # on: pull_request: Runs only tests/checks. does not deploy code to Azure yet.
   push:
     branches: [main] # only trigger this workflow on pushes to the main branch
     paths: 'api/**' # only trigger this workflow if files in the api folder are changed

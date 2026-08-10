@@ -1,6 +1,6 @@
 # Name: Update infra
 
-# on:
+# on:g
 #   push:
 #     branches: [main]
 #     paths:

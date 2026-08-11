@@ -14,7 +14,7 @@ def getresumecounter(req: func.HttpRequest) -> func.HttpResponse:
     try:
         entity = table_client.get_entity(partition_key="visitor_stats", row_key="1")
         # increment
-        entity['count'] += 1
+        entity['count'] += 10
         table_client.update_entity(mode='merge', entity=entity)
     except ResourceNotFoundError:
         # If the entity doesn't exist, create it with count=1

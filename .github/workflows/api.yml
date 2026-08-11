@@ -1,10 +1,13 @@
 name: Deploy api
 
 on:
-  # on: pull_request: Runs only tests/checks. does not deploy code to Azure yet.
+  # on: pull_request: Runs tests/checks only. does not deploy code to Azure yet.
   push:
-    branches: [main] # only trigger this workflow on pushes to the main branch
-    paths: 'api/**' # only trigger this workflow if files in the api folder are changed
+    branches: [main]
+    paths: 
+      - 'api/**' 
+      - '.github/workflows/api.yml'
+    workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 permissions:
   id-token: write
@@ -17,25 +20,27 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest # this is used to run the job on a Linux machine.
-    steps:
-      - name: "Checkout GitHub Action"
+    steps: 
+      - name: "1. download repo code to the runner"
         uses: actions/checkout@v4 #this action checks out repo under $GITHUB_WORKSPACE, so this workflow can access it.
 
-      - name: "Login via Azure (OIDC)" 
+      - name: "2. Login Token Azure (OIDC)" 
         uses: azure/login@v2 # Use v2 for OIDC support
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: "Setup Python"
+      - name: "3. Setup Python env on the runner"
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: "Deploy to Azure Functions"
-        uses: Azure/functions-action@v1
+      - name: "4. Package the api/ dir and deploy to Azure"
+        uses: Azure/functions-action@v1 # this is the official GitHub Action for deploying to Azure Functions. It is a wrapper around the Azure CLI command az functionapp deployment source config-zip, which deploys a zip file to an Azure Function App.
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: "."
+          package: "./api"
           remote-build: true
+
+# 

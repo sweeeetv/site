@@ -1,4 +1,4 @@
-Name: Infra deployment
+name: Infra deployment
 
 
 # terraform plan and show details after pr and before merge

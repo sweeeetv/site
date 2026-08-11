@@ -6,7 +6,7 @@ on:
     branches: [main] #runs when push to main, or a PR merge. ONLY if the push includes changes to the frontend folder. 
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend.yml' 
+     # - '.github/workflows/frontend.yml' 
 
 permissions: #limit this for security
   id-token: write # allows gh to generate tk for OIDC handshake

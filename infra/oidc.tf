@@ -33,7 +33,7 @@ resource "azuread_application_federated_identity_credential" "github_main" {
 #That JWT gets sent to Entra ID and exchanged for a real Azure access token. - GHR: "I want an Azure access token for App Registration ID client_id."
 # For Entra ID to agree to do that exchange, the incoming JWT must declare its intended audience as - api://AzureADTokenExchange — this is Microsoft's fixed string that means "this token is presenting itself to be traded in for an Entra ID token, nothing else."
 }
-//assign contributor role on the rg - what the identity allowed to do
+//assign contributor role on the rg - what the identity allowed to do.
 resource "azurerm_role_assignment" "github_cicd_contributor"{
     scope = azurerm_resource_group.resume.id
     role_definition_name = "Contributor"

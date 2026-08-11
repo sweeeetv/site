@@ -25,6 +25,10 @@ variable "github_repo" {
   type = string
 }
 
+variable "oidc_subject" { //oidc.tf
+  type =string
+}
+
 
 # ------------ secrets -------------- #
 variable "github_token" {

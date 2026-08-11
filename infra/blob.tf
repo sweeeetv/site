@@ -8,9 +8,14 @@ resource "azurerm_storage_account" "frontend" {
   account_kind             = "StorageV2"
   access_tier              = "Hot"
   tags                     = var.tags
-    custom_domain {
+  custom_domain {
     name          = "www.weirdcloud.dev"
-    use_subdomain = true
+    use_subdomain = true  // a boolean that tells Azure how to parse CNAME indirect verification for subdomains vs. root domains.
+    //------------- uncomfirmed -------------//
+    //true means: "Validate this subdomain indirectly by looking for an asverify CNAME on the parent root domain."
+    //default - false,means: "Validate my custom domain directly via CNAME (or via asverify.mydomain.com)."
+
+    //This is designed If a company owns weirdcloud.dev and verify the apex, they don't want to create 50 different asverify records for 50 different microservice subdomains (app, api, auth, www, dev, etc.).
   }
 }
 

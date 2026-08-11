@@ -22,7 +22,7 @@ resource "azuread_application_federated_identity_credential" "github_main" {
 #azure fetches gh's public key from this URL, to verify JWTs from gh
     issuer ="https://token.actions.githubusercontent.com" //1
     # must match what GitHub puts in the JWT
-    subject  = "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main" //2 The Issuer (the external system) dictates the subject format, NOT the audience. Azure AD does not control or care how the subject is formatted; Azure AD simply acts as a strict string-matcher.
+    subject  = var.oidc_subject //2 The Issuer (the external system) dictates the subject format, NOT the audience. Azure AD does not control or care how the subject is formatted; Azure AD simply acts as a strict string-matcher.
     // audience is the app reg's client_id(azuread_application.github_cicd.client_id)
     //JWT contains an aud field. answers "who is this token for?"
     //3
@@ -37,6 +37,12 @@ resource "azuread_application_federated_identity_credential" "github_main" {
 resource "azurerm_role_assignment" "github_cicd_contributor"{
     scope = azurerm_resource_group.resume.id
     role_definition_name = "Contributor"
+    principal_id = azuread_service_principal.github_cicd.object_id
+}
+
+resource "azurerm_role_assignment" "github_cicd_blob_data_contributor"{
+    scope = azurerm_resource_group.resume.id
+    role_definition_name = "Storage Blob Data Contributor"
     principal_id = azuread_service_principal.github_cicd.object_id
 }
 //push the 3 ids:

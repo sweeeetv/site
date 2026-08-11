@@ -18,6 +18,8 @@ output "counter_api_endpoint"{
 
 
 
+
+
 # output "cosmos_primary_key" {
 #   value = azurerm_cosmosdb_account.counter_db.primary_master_key
 #   sensitive = true

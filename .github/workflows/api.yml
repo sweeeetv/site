@@ -1,4 +1,4 @@
-name: Deploy api
+name: API deployment
 
 on:
   # on: pull_request: Runs tests/checks only. does not deploy code to Azure yet.
@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths: 
       - 'api/**' 
-      - '.github/workflows/api.yml'
+      #- '.github/workflows/api.yml'
     workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 permissions:

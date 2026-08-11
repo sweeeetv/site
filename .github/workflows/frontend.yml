@@ -35,7 +35,7 @@ jobs:
               --account-name storageacc444resume \
               --auth-mode login \
               -d '$web' \
-              -s ./frontend \
+              -s ./frontend/ \
               --overwrite
       # Cloudflare purge step — needed because proxied = true means Cloudflare caches your static assets; without purging, visitors might see stale content after deploy until cache naturally expires:
       # - name: Purge Cloudflare Cache

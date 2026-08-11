@@ -5,6 +5,16 @@ data "cloudflare_zone" "domain" {
 }
 
 #-------------------- root, www -------------------------#
+// test this if new subdomain is added:
+// verify the apex so all the subdomains are verified:
+// read blob.tf resource "azurerm_storage_account" "frontend" {... custom_domain {}} section.
+# resource "cloudflare_record" "apex_verify" {
+#   zone_id = data.cloudflare_zone.domain.id
+#   name    = "asverify"
+#   type    = "CNAME"
+#   content = "asverify.storageacc444resume.z8.web.core.windows.net"
+#   proxied = false 
+# }
 #create root domain
 resource "cloudflare_record" "root" {
   zone_id = data.cloudflare_zone.domain.id
@@ -17,13 +27,14 @@ resource "cloudflare_record" "root" {
 }
 
 //2 ways to point apex to blob: 1) CNAME flattening. 2) Page Rule redirect.
+//here uses page rule redirect, because CNAME flattening is not supported by all DNS providers, and CF's CNAME flattening is not compatible with Azure Storage blob's custom domain verification.
 resource "cloudflare_page_rule" "redirect_root_to_www" {
   zone_id = data.cloudflare_zone.domain.id
   target  = "weirdcloud.dev/*" //catches all paths on apex
   status  = "active"
 
-  actions = {
-    forwarding_url = {
+  actions  {
+    forwarding_url  {
       status_code = 301 # Permanent Redirect, good for SEO. Tells Google "these are permanently the same page, count it all toward www."
       url   = "https://www.weirdcloud.dev/$1" //paste * from target into $1, so /foo/bar becomes https://www.weirdcloud.dev/foo/bar
     }

@@ -54,11 +54,13 @@ resource "azurerm_function_app_flex_consumption" "visitor_counter_api" {
       ]
     }
   }
-  # lifecycle {
-  #   ignore_changes = [
-  #     site_config[0].cors
-  #   ]
-  # }
+  //this field is managed/mutated by something outside Terraform, stop treating drift on it as something to reconcile.
+  lifecycle {
+    ignore_changes = [
+      app_settings["APPLICATIONINSIGHTS_CONNECTION_STRING"],
+      site_config[0].application_insights_connection_string,
+    ]
+  }
 }
 #APM for the app, captures request traces, response times, exceptions, dependency calls and custom telemetry.
 resource "azurerm_application_insights" "visitor_counter_appInsights" {
